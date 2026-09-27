@@ -16,12 +16,18 @@ const canvas = document.querySelector('canvas.webgl')
 const scene = new THREE.Scene()
 
 /**
+ * Textures
+ */
+const textureLoader = new THREE.TextureLoader()
+const galaxyTexture = textureLoader.load('/particles/8.png')
+
+/**
  * Galaxy
  */
 const global = {}
 global.rotate = true
 global.count = 100000
-global.size = 0.01
+global.size = 0.03
 global.radius = 4
 global.branches = 3
 global.spin = 1.5
@@ -90,9 +96,11 @@ const generateGalaxy = () => {
     material = new THREE.PointsMaterial({
         size: global.size,
         sizeAttenuation: true,
+        vertexColors: true,
+        transparent: true,
+        alphaMap: galaxyTexture,
         depthWrite: false,
-        blending: THREE.AdditiveBlending,
-        vertexColors: true
+        blending: THREE.AdditiveBlending
     })
 
     /**
