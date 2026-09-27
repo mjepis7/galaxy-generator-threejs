@@ -7,7 +7,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
  * Base
  */
 // Debug
-const gui = new GUI({ title: 'Galaxy controls' })
+const gui = new GUI({ title: 'Galaxy controls', closeFolders: true })
 
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
@@ -19,6 +19,7 @@ const scene = new THREE.Scene()
  * Galaxy
  */
 const global = {}
+global.rotate = true
 global.count = 100000
 global.size = 0.01
 global.radius = 4
@@ -26,6 +27,7 @@ global.branches = 3
 global.spin = 1.5
 global.randomness = 0.45
 global.randomnessPower = 5.5
+global.rotationSpeed = 0.5
 global.insideColor = '#e27208'
 global.outsideColor = '#6600ff'
 
@@ -101,15 +103,25 @@ const generateGalaxy = () => {
 }
 generateGalaxy()
 
-gui.add(global, 'count').min(100).max(1000000).step(100).onFinishChange(generateGalaxy).name('Particle count')
-gui.add(global, 'size').min(0.001).max(0.1).step(0.001).onFinishChange(generateGalaxy).name('Particle size')
-gui.add(global, 'radius').min(0.01).max(20).step(0.01).onFinishChange(generateGalaxy).name('Galaxy radius')
-gui.add(global, 'branches').min(2).max(20).step(1).onFinishChange(generateGalaxy).name('Galaxy branches')
-gui.add(global, 'spin').min(-5).max(5).step(0.001).onFinishChange(generateGalaxy).name('Galaxy spin')
-gui.add(global, 'randomness').min(0).max(2).step(0.001).onFinishChange(generateGalaxy).name('Galaxy randomness')
-gui.add(global, 'randomnessPower').min(1).max(10).step(0.001).onFinishChange(generateGalaxy).name('Galaxy randomness power')
-gui.addColor(global, 'insideColor').onFinishChange(generateGalaxy)
-gui.addColor(global, 'outsideColor').onFinishChange(generateGalaxy)
+// Tweaks
+const particlesFolder = gui.addFolder('Particles')
+particlesFolder.add(global, 'count').min(100).max(1000000).step(100).onFinishChange(generateGalaxy).name('Count')
+particlesFolder.add(global, 'size').min(0.001).max(0.1).step(0.001).onFinishChange(generateGalaxy).name('Size')
+
+const shapeFolder = gui.addFolder('Shape')
+shapeFolder.add(global, 'radius').min(0.01).max(20).step(0.01).onFinishChange(generateGalaxy).name('Radius')
+shapeFolder.add(global, 'branches').min(2).max(20).step(1).onFinishChange(generateGalaxy).name('Branches')
+shapeFolder.add(global, 'spin').min(-5).max(5).step(0.001).onFinishChange(generateGalaxy).name('Spin')
+shapeFolder.add(global, 'randomness').min(0).max(2).step(0.001).onFinishChange(generateGalaxy).name('Randomness')
+shapeFolder.add(global, 'randomnessPower').min(1).max(10).step(0.001).onFinishChange(generateGalaxy).name('Randomness power')
+
+const colorsFolder = gui.addFolder('Colors')
+colorsFolder.addColor(global, 'insideColor').onFinishChange(generateGalaxy).name('Inside')
+colorsFolder.addColor(global, 'outsideColor').onFinishChange(generateGalaxy).name('Outside')
+
+const animationFolder = gui.addFolder('Animation')
+animationFolder.add(global, 'rotate').name('Rotate')
+animationFolder.add(global, 'rotationSpeed').min(-3).max(3).step(0.001).name('Speed')
 
 /**
  * Sizes
@@ -139,9 +151,9 @@ window.addEventListener('resize', () =>
  */
 // Base camera
 const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100)
-camera.position.x = 3
-camera.position.y = 3
-camera.position.z = 3
+camera.position.x = 3.5
+camera.position.y = 3.5
+camera.position.z = 3.5
 scene.add(camera)
 
 // Controls
@@ -161,10 +173,23 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
  * Animate
  */
 const clock = new THREE.Clock()
+let previousTime = 0
+let rotationAngle = 0
+
 
 const tick = () =>
 {
     const elapsedTime = clock.getElapsedTime()
+    const deltaTime = elapsedTime - previousTime
+    previousTime = elapsedTime
+
+    // Rotate galaxy
+    if (global.rotate) {
+        rotationAngle += deltaTime * global.rotationSpeed
+    }
+    points.rotation.x = Math.sin(rotationAngle) * 0.15
+    points.rotation.y = rotationAngle
+    points.rotation.z = Math.cos(rotationAngle) * 0.15
 
     // Update controls
     controls.update()
@@ -177,3 +202,5 @@ const tick = () =>
 }
 
 tick()
+
+console.log(5 % 3)
