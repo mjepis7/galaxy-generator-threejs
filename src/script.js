@@ -7,7 +7,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
  * Base
  */
 // Debug
-const gui = new GUI()
+const gui = new GUI({ title: 'Galaxy controls' })
 
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
@@ -20,13 +20,26 @@ const scene = new THREE.Scene()
  */
 const global = {}
 global.count = 10000
-global.size = 0.02
+global.size = 0.001
+
+let geometry = null
+let material = null
+let points = null
 
 const generateGalaxy = () => {
     /**
+     * Destroy old galaxy
+     */
+    if (geometry !== null) {
+        geometry.dispose() // dispose the object from memory
+        material.dispose() // dispose the object from memory
+        scene.remove(points)
+    } 
+
+    /**
      * Geometry
      */
-    const geometry = new THREE.BufferGeometry()
+    geometry = new THREE.BufferGeometry()
 
     const positions = new Float32Array(global.count * 3)
 
@@ -42,7 +55,7 @@ const generateGalaxy = () => {
     /**
      * Material
      */
-    const material = new THREE.PointsMaterial({
+    material = new THREE.PointsMaterial({
         size: global.size,
         sizeAttenuation: true,
         depthWrite: false,
@@ -52,10 +65,13 @@ const generateGalaxy = () => {
     /**
      * Points
      */
-    const points = new THREE.Points(geometry, material)
+    points = new THREE.Points(geometry, material)
     scene.add(points)
 }
 generateGalaxy()
+
+gui.add(global, 'count').min(100).max(1000000).step(100).onFinishChange(generateGalaxy)
+gui.add(global, 'size').min(0.001).max(0.1).step(0.001).onFinishChange(generateGalaxy)
 
 /**
  * Sizes
