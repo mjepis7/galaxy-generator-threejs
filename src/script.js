@@ -21,11 +21,13 @@ const scene = new THREE.Scene()
 const global = {}
 global.count = 100000
 global.size = 0.01
-global.radius = 5
+global.radius = 4
 global.branches = 3
-global.spin = 1
-global.randomness = 0.2
-global.randomnessPower = 3
+global.spin = 1.5
+global.randomness = 0.45
+global.randomnessPower = 5.5
+global.insideColor = '#e27208'
+global.outsideColor = '#6600ff'
 
 let geometry = null
 let material = null
@@ -47,10 +49,15 @@ const generateGalaxy = () => {
     geometry = new THREE.BufferGeometry()
 
     const positions = new Float32Array(global.count * 3)
+    const colors = new Float32Array(global.count * 3)
+
+    const colorInside = new THREE.Color(global.insideColor)
+    const colorOutside = new THREE.Color(global.outsideColor)
 
     for (let i = 0; i < global.count; i++) {
         const i3 = i * 3 
 
+        // Position
         const radius = Math.random() * global.radius
         const branchAngle = (i % global.branches) / global.branches * Math.PI * 2
         const spinAngle = radius * global.spin
@@ -62,8 +69,18 @@ const generateGalaxy = () => {
         positions[i3] = Math.cos(branchAngle + spinAngle) * radius + randomX
         positions[i3 + 1] = 0 + randomY
         positions[i3 + 2] = Math.sin(branchAngle + spinAngle) * radius + randomZ
+
+        // Color
+        const mixedColor = colorInside.clone()
+        mixedColor.lerp(colorOutside, radius / global.radius)
+
+        colors[i3] = mixedColor.r
+        colors[i3 + 1] = mixedColor.g
+        colors[i3 + 2] = mixedColor.b
     }
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
 
     /**
      * Material
@@ -72,7 +89,8 @@ const generateGalaxy = () => {
         size: global.size,
         sizeAttenuation: true,
         depthWrite: false,
-        blending: THREE.AdditiveBlending
+        blending: THREE.AdditiveBlending,
+        vertexColors: true
     })
 
     /**
@@ -90,6 +108,8 @@ gui.add(global, 'branches').min(2).max(20).step(1).onFinishChange(generateGalaxy
 gui.add(global, 'spin').min(-5).max(5).step(0.001).onFinishChange(generateGalaxy).name('Galaxy spin')
 gui.add(global, 'randomness').min(0).max(2).step(0.001).onFinishChange(generateGalaxy).name('Galaxy randomness')
 gui.add(global, 'randomnessPower').min(1).max(10).step(0.001).onFinishChange(generateGalaxy).name('Galaxy randomness power')
+gui.addColor(global, 'insideColor').onFinishChange(generateGalaxy)
+gui.addColor(global, 'outsideColor').onFinishChange(generateGalaxy)
 
 /**
  * Sizes
